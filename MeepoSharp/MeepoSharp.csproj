@@ -7,8 +7,8 @@
     <ProjectGuid>{5618AB4A-EFA6-4867-BB8B-DD195445CB05}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MantaEvade</RootNamespace>
-    <AssemblyName>MantaEvade</AssemblyName>
+    <RootNamespace>MeepoSharp</RootNamespace>
+    <AssemblyName>MeepoSharp</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
