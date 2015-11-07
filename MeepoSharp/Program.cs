@@ -15,13 +15,16 @@ namespace MeepoSharp
         private static Hero me;
         private static Hero target;
         private static bool activated;
+        private static bool togleW;
         private static Font txt;
         private static Font not;
+        private const Key ToggleW = Key.R;
         private static Key KeyCombo = Key.E;
 
         private static void Main(string[] args)
         {
             Game.OnUpdate += Game_OnUpdate;
+            Game.OnUpdate += Game_OnUpdateW;
             Game.OnWndProc += Game_OnWndProc;
             Console.WriteLine("Meepo combo loaded!");
 
@@ -66,7 +69,7 @@ namespace MeepoSharp
 
             var net = me.Spellbook.SpellQ;
             //var poof = me.Spellbook.SpellW;
-            var meepos = ObjectMgr.GetEntities<Meepo>().Where(meepo => meepo.Team == me.Team && !meepo.Equals(me)).ToList(); 
+            var meepos = ObjectMgr.GetEntities<Meepo>().Where(meepo => meepo.Team == me.Team && !meepo.Equals(me)).ToList();
             var hex = me.FindItem("item_sheepstick");
             var blinkDagger = me.FindItem("item_blink");
 
@@ -97,7 +100,8 @@ namespace MeepoSharp
 
                             var eb = meepo.Spellbook.SpellQ;
                             if (Utils.SleepCheck("Meepos_net"))
-                                if (!target.Modifiers.ToList().Exists(x => x.Name == "modifier_meepo_earthbind") && !target.IsMagicImmune())
+                                if (!target.Modifiers.ToList().Exists(x => x.Name == "modifier_meepo_earthbind") &&
+                                    !target.IsMagicImmune())
                                 {
                                     if (eb.CastSkillShot(target) && CanCast(meepo, eb) && me.Distance2D(target) <= 500 &&
                                         !target.IsMagicImmune() && !meepo.IsChanneling())
@@ -146,7 +150,30 @@ namespace MeepoSharp
             }
         }
 
-        private static void Game_OnWndProc(WndEventArgs args)
+        public static void Game_OnUpdateW(EventArgs args)
+        {
+            var me = ObjectMgr.LocalHero;
+            if (!Game.IsInGame || me.ClassID != ClassID.CDOTA_Unit_Hero_Meepo)
+            {
+                return;
+            }
+
+            if (togleW)
+            {
+                var meepos = ObjectMgr.GetEntities<Meepo>().Where(meepo => meepo.Team == me.Team).ToList();
+                foreach (var meepo in meepos)
+                {
+                    var poof = meepo.Spellbook.SpellW;
+                    if (CanCast(meepo, poof))
+                    {
+                        poof.UseAbility(meepo);
+                    }
+                }
+            }
+        }
+    
+
+    private static void Game_OnWndProc(WndEventArgs args)
         {
             if (!Game.IsChatOpen)
             {
@@ -157,6 +184,12 @@ namespace MeepoSharp
                 else
                 {
                     activated = false;
+                }
+                {
+                    if (Game.IsKeyDown(ToggleW))
+                        togleW = true;
+                    else
+                        togleW = false;
                 }
             }
         }
@@ -186,6 +219,15 @@ namespace MeepoSharp
             if (!activated)
             {
                 txt.DrawText(null, "MeepoSharp: Use  [" + KeyCombo + "] for start comboing!", 4, 150, Color.Red);
+            }
+            if (togleW)
+            {
+                txt.DrawText(null, "MeepoSharp: Poof ALL!", 4, 190, Color.Green);
+            }
+
+            if (!togleW)
+            {
+                txt.DrawText(null, "MeepoSharp: Use  [" + ToggleW + "] for Poof ALL", 4, 190, Color.Orange);
             }
         }
 
