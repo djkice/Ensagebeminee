@@ -94,6 +94,19 @@ namespace MeepoSharp
                             {
                                 poof.UseAbility(me);
                             }
+
+                            var eb = meepo.Spellbook.SpellQ;
+                            if (Utils.SleepCheck("Meepos_net"))
+                                if (!target.Modifiers.ToList().Exists(x => x.Name == "modifier_meepo_earthbind") && !target.IsMagicImmune())
+                                {
+                                    if (eb.CastSkillShot(target) && CanCast(meepo, eb) && me.Distance2D(target) <= 500 &&
+                                        !target.IsMagicImmune() && !meepo.IsChanneling())
+
+                                    {
+                                        eb.CastSkillShot(target);
+                                        Utils.Sleep(750 + Game.Ping, "Meepos_net");
+                                    }
+                                }
                         }
                         Utils.Sleep(150, "Anything");
                     }
@@ -125,12 +138,7 @@ namespace MeepoSharp
                 {
                     me.Move(Game.MousePosition);
                 }
-                /*  if (CanCast(meepos, _net) && me.Distance2D(target) <= 500 && !target.IsMagicImmune() && 
-                 Utils.SleepCheck("Net", "Meepos_Net") && )
-             {
-                 _net.UseAbility(target.Position);
-                 Utils.Sleep(300 + Game.Ping, "Net");
-             }*/
+
             }
             else
             {
