@@ -76,6 +76,8 @@ namespace TemplarCombo
             var abyssal = _me.FindItem("item_abyssal_blade");
             var halberd = _me.FindItem("item_heavens_halberd");
             var diffusal = _me.FindItem("item_diffusal_blade");
+            var solarcrest = _me.FindItem("item_solar_crest");
+            var medal = _me.FindItem("item_medallion_of_courage");
             var maskofmadness = _me.FindItem("item_mask_of_madness");
 
             if (_target != null && _target.IsAlive && !_target.IsInvul())
@@ -100,6 +102,15 @@ namespace TemplarCombo
                 if (CanCast(_me, abyssal) && Utils.SleepCheck("abyssal")) {
                     abyssal.UseAbility(_target);
                     Utils.Sleep(150 + Game.Ping, "abyssal");
+                }
+                if (CanCast(_me, solarcrest) && Utils.SleepCheck("solarcrest")) {
+                    solarcrest.UseAbility(_target);
+                    Utils.Sleep(150 + Game.Ping, "solarcrest");
+                }
+                if (CanCast(_me, medal) && Utils.SleepCheck("medal"))
+                {
+                    medal.UseAbility(_target);
+                    Utils.Sleep(150 + Game.Ping, "medal");
                 }
                 if (CanCast(_me, diffusal) && !_target.IsMagicImmune() && _target.Modifiers.FirstOrDefault(modifier => modifier.Name == "modifier_item_diffusal_blade_slow") == null && Utils.SleepCheck("diffusal")) {
                     diffusal.UseAbility(_target);
