@@ -182,7 +182,7 @@ namespace ODSharp
                     me.Move(Game.MousePosition);
                     Utils.Sleep(150 + Game.Ping, "follow");
                 }
-                else if (!orb.CanBeCasted() && Utils.SleepCheck("orb") && target != null)
+                else if (!orb.CanBeCasted() && Utils.SleepCheck("orb") && target != null && target.IsMagicImmune())
                 {
                     me.Attack(target);
                     Utils.Sleep(150, "noorb");
@@ -209,7 +209,6 @@ namespace ODSharp
 
             if (Menu.Item("farmKey").GetValue<KeyBind>().Active)
             {
-                UpdateAutoAttack();
                 var creepW =
                 ObjectMgr.GetEntities<Creep>()
                     .Where(
@@ -226,6 +225,7 @@ namespace ODSharp
                 {
                     var creepmax = creepW.MaxOrDefault(x => x.Health);
                     if (creepmax == LastAttacked) return;
+                    UpdateAutoAttack();
                     me.Spellbook.SpellQ.UseAbility(creepmax);
                     LastAttacked = creepmax;
                     Utils.Sleep(200 + Game.Ping, "Farm");
@@ -256,7 +256,7 @@ namespace ODSharp
                     var enemy = ObjectMgr.GetEntities<Hero>().Where(e => e.Team != me.Team && e.IsAlive && e.IsVisible && !e.IsIllusion && !e.UnitState.HasFlag(UnitState.MagicImmune) && me.Distance2D(e) < range).ToList();
                     foreach (var v in enemy)
                     {
-                        var damage = Math.Floor((wDamage[astrallvl] * (1 - v.MagicDamageResist)) - (v.HealthRegeneration * 4.5));
+                        var damage = Math.Floor((wDamage[astrallvl] * (1 - v.MagicDamageResist)) - (v.HealthRegeneration * 5));
                         if (v.Health < damage && me.Distance2D(v) < range)
                         {
                             astral.UseAbility(v);
