@@ -256,7 +256,7 @@ namespace ODSharp
                     var enemy = ObjectMgr.GetEntities<Hero>().Where(e => e.Team != me.Team && e.IsAlive && e.IsVisible && !e.IsIllusion && !e.UnitState.HasFlag(UnitState.MagicImmune) && me.Distance2D(e) < range).ToList();
                     foreach (var v in enemy)
                     {
-                        var damage = Math.Floor((wDamage[astrallvl] * (1 - v.MagicDamageResist)) - (v.HealthRegeneration * 4));
+                        var damage = Math.Floor((wDamage[astrallvl] * (1 - v.MagicDamageResist)) - (v.HealthRegeneration * 4.5));
                         if (v.Health < damage && me.Distance2D(v) < range)
                         {
                             astral.UseAbility(v);
