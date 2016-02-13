@@ -10,7 +10,7 @@ namespace Panic_
 {
     internal class Program
     {
-        private static Item bkb, ghost, ethereal, tp, bot;
+        private static Item bkb, ghost, ethereal, blink, force, tp, bot;
         private static Hero me;
         private static Unit fountain;
         private static bool panic;
@@ -35,6 +35,8 @@ namespace Panic_
                 {"item_black_king_bar", true},
                 {"item_ghost", false},
                 {"item_ethereal_blade", false},
+                {"item_blink", true},
+                {"item_force_staff", true},
                 {"item_tpscroll", true},
                 {"item_travel_boots", true},
 
@@ -59,6 +61,12 @@ namespace Panic_
 
             if (ethereal == null)
                 ethereal = me.FindItem("item_ethereal_blade");
+
+            if (blink == null)
+                ethereal = me.FindItem("item_blink");
+
+            if (force == null)
+                ethereal = me.FindItem("item_force_staff");
 
             if (tp == null)
                 tp = me.FindItem("item_tpscroll");
@@ -103,6 +111,20 @@ namespace Panic_
                 {
                     ethereal.UseAbility(me);
                     Utils.Sleep(150 + Game.Ping, "ethereal");
+                }
+
+                if (blink != null && blink.IsValid && blink.CanBeCasted() && Utils.SleepCheck("blink") &&
+                    menuValue.IsEnabled(blink.Name))
+                {
+                    blink.UseAbility(me.NetworkPosition);
+                    Utils.Sleep(150 + Game.Ping, "blink");
+                }
+
+                if (force != null && force.IsValid && force.CanBeCasted() && Utils.SleepCheck("force") &&
+                    menuValue.IsEnabled(force.Name))
+                {
+                    force.UseAbility(me);
+                    Utils.Sleep(150 + Game.Ping, "force");
                 }
 
                 if (bot != null && bot.IsValid && bot.CanBeCasted() && Utils.SleepCheck("bot") &&
