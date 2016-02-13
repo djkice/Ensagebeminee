@@ -5,6 +5,7 @@ using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
+using SharpDX;
 
 namespace Panic_
 {
@@ -15,6 +16,7 @@ namespace Panic_
         private static Unit fountain;
         private static bool panic;
         private static bool noitem;
+        private static Vector3 Mouse_Position;
         private static readonly Menu Menu = new Menu("Panic!", "panic", true, "", true);
         private static AbilityToggler menuValue;
         private static bool menuvalueSet;
@@ -83,6 +85,7 @@ namespace Panic_
             if (panic)
 
             {
+                Mouse_Position = Game.MousePosition;
                 if (fountain == null || !fountain.IsValid)
                 {
                     fountain = ObjectMgr.GetEntities<Unit>()
@@ -116,7 +119,7 @@ namespace Panic_
                 if (blink != null && blink.IsValid && blink.CanBeCasted() && Utils.SleepCheck("blink") &&
                     menuValue.IsEnabled(blink.Name))
                 {
-                    blink.UseAbility(me.NetworkPosition);
+                    blink.UseAbility(Mouse_Position);
                     Utils.Sleep(150 + Game.Ping, "blink");
                 }
 
