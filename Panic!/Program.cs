@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Ensage;
@@ -11,7 +11,7 @@ namespace Panic_
 {
     internal class Program
     {
-        private static Item bkb, ghost, ethereal, blink, force, tp, bot;
+        private static Item bkb, ghost, ethereal, blink, force, tp, bot, bott;
         private static Hero me;
         private static Unit fountain;
         private static bool panic;
@@ -41,6 +41,7 @@ namespace Panic_
                 {"item_force_staff", true},
                 {"item_tpscroll", true},
                 {"item_travel_boots", true},
+                {"item_travel_boots_2", true},
 
             };
             Menu.AddItem(new MenuItem("Items", "Items:").SetValue(new AbilityToggler(dict)));
@@ -65,16 +66,19 @@ namespace Panic_
                 ethereal = me.FindItem("item_ethereal_blade");
 
             if (blink == null)
-                ethereal = me.FindItem("item_blink");
+                blink = me.FindItem("item_blink");
 
             if (force == null)
-                ethereal = me.FindItem("item_force_staff");
+                force = me.FindItem("item_force_staff");
 
             if (tp == null)
                 tp = me.FindItem("item_tpscroll");
 
             if (bot == null)
                 bot = me.FindItem("item_travel_boots");
+
+            if (bott == null)
+                bott = me.FindItem("item_travel_boots_2");
 
             if (!menuvalueSet)
             {
@@ -83,7 +87,6 @@ namespace Panic_
             }
 
             if (panic)
-
             {
                 Mouse_Position = Game.MousePosition;
                 if (fountain == null || !fountain.IsValid)
@@ -94,7 +97,6 @@ namespace Panic_
 
                 if (bkb != null && bkb.IsValid && bkb.CanBeCasted() && Utils.SleepCheck("bkb") &&
                     menuValue.IsEnabled(bkb.Name))
-
                 {
                     bkb.UseAbility();
                     Utils.Sleep(150 + Game.Ping, "bkb");
@@ -102,7 +104,6 @@ namespace Panic_
 
                 if (ghost != null && ghost.IsValid && ghost.CanBeCasted() && Utils.SleepCheck("ghost") &&
                     menuValue.IsEnabled(ghost.Name))
-
                 {
                     ghost.UseAbility();
                     Utils.Sleep(150 + Game.Ping, "ghost");
@@ -110,7 +111,6 @@ namespace Panic_
 
                 if (ethereal != null && ethereal.IsValid && ethereal.CanBeCasted() && Utils.SleepCheck("ethereal") &&
                     menuValue.IsEnabled(ethereal.Name))
-
                 {
                     ethereal.UseAbility(me);
                     Utils.Sleep(150 + Game.Ping, "ethereal");
@@ -132,7 +132,48 @@ namespace Panic_
 
                 if (bot != null && bot.IsValid && bot.CanBeCasted() && Utils.SleepCheck("bot") &&
                     menuValue.IsEnabled(bot.Name))
+                {
+                    bot.UseAbility(fountain);
+                    Utils.Sleep(150 + Game.Ping, "bot");
+                }
 
+                else if (bott != null && bott.IsValid && bott.CanBeCasted() && Utils.SleepCheck("bott") &&
+                         menuValue.IsEnabled(tp.Name))
+                {
+                    bott.UseAbility(fountain);
+                    Utils.Sleep(150 + Game.Ping, "bott");
+                }
+
+                else if (tp != null && tp.IsValid && bot.CanBeCasted() && Utils.SleepCheck("tp") &&
+                         menuValue.IsEnabled(tp.Name))
+                {
+                    tp.UseAbility(fountain);
+                    Utils.Sleep(150 + Game.Ping, "tp");
+                }
+
+            }
+        }
+
+        public static void No_Item(EventArgs args)
+        {
+            if (!Game.IsInGame || Game.IsPaused || Game.IsWatchingGame)
+            {
+                return;
+            }
+
+            me = ObjectMgr.LocalHero;
+
+            if (noitem)
+            {
+
+                if (fountain == null || !fountain.IsValid)
+                {
+                    fountain = ObjectMgr.GetEntities<Unit>()
+                        .FirstOrDefault(x => x.Team == me.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
+                }
+
+                if (bot != null && bot.IsValid && bot.CanBeCasted() && Utils.SleepCheck("bot") &&
+                    menuValue.IsEnabled(bot.Name))
                 {
                     bot.UseAbility(fountain);
                     Utils.Sleep(150 + Game.Ping, "bot");
@@ -144,73 +185,38 @@ namespace Panic_
                     tp.UseAbility(fountain);
                     Utils.Sleep(150 + Game.Ping, "tp");
                 }
+
             }
         }
 
-            public static void No_Item (EventArgs args)
+        private static void Game_OnWndProc(WndEventArgs args)
+        {
+            if (!Game.IsChatOpen)
             {
-                if (!Game.IsInGame || Game.IsPaused || Game.IsWatchingGame)
+
+                if (Menu.Item("panic").GetValue<KeyBind>().Active)
                 {
-                    return;
+                    panic = true;
+                }
+                else
+                {
+                    panic = false;
                 }
 
-                me = ObjectMgr.LocalHero;
-
-                if (noitem)
+                if (Menu.Item("noitem").GetValue<KeyBind>().Active)
                 {
-
-                    if (fountain == null || !fountain.IsValid)
-                    {
-                        fountain = ObjectMgr.GetEntities<Unit>()
-                            .FirstOrDefault(x => x.Team == me.Team && x.ClassID == ClassID.CDOTA_Unit_Fountain);
-                    }
-
-                    if (bot != null && bot.IsValid && bot.CanBeCasted() && Utils.SleepCheck("bot") &&
-                        menuValue.IsEnabled(bot.Name))
-
-                    {
-                        bot.UseAbility(fountain);
-                        Utils.Sleep(150 + Game.Ping, "bot");
-                    }
-
-                    else if (tp != null && tp.IsValid && bot.CanBeCasted() && Utils.SleepCheck("tp") &&
-                             menuValue.IsEnabled(tp.Name))
-                    {
-                        tp.UseAbility(fountain);
-                        Utils.Sleep(150 + Game.Ping, "tp");
-                    }
-
+                    noitem = true;
                 }
-            }
-
-            private static void Game_OnWndProc(WndEventArgs args)
-            {
-                if (!Game.IsChatOpen)
+                else
                 {
-
-                    if (Menu.Item("panic").GetValue<KeyBind>().Active)
-                    {
-                        panic = true;
-                    }
-                    else
-                    {
-                        panic = false;
-                    }
-
-                    if (Menu.Item("noitem").GetValue<KeyBind>().Active)
-                    {
-                        noitem = true;
-                    }
-                    else
-                    {
-                        noitem = false;
-                    }
-
+                    noitem = false;
                 }
+
             }
         }
     }
+}
 
-        
-    
+
+
 
