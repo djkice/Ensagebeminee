@@ -109,7 +109,7 @@ namespace Panic_
                     Utils.Sleep(150 + Game.Ping, "ghost");
                 }
 
-                if (ethereal != null && ethereal.IsValid && ethereal.CanBeCasted() && Utils.SleepCheck("ethereal") &&
+                if (ethereal != null && me.Mana > 175 && ethereal.IsValid && ethereal.CanBeCasted() && Utils.SleepCheck("ethereal") &&
                     menuValue.IsEnabled(ethereal.Name))
                 {
                     ethereal.UseAbility(me);
@@ -123,7 +123,7 @@ namespace Panic_
                     Utils.Sleep(150 + Game.Ping, "blink");
                 }
 
-                if (force != null && force.IsValid && force.CanBeCasted() && Utils.SleepCheck("force") &&
+                if (force != null && force.IsValid && me.Mana > 100 && force.CanBeCasted() && Utils.SleepCheck("force") &&
                     menuValue.IsEnabled(force.Name))
                 {
                     force.UseAbility(me);
