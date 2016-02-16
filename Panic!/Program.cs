@@ -138,7 +138,7 @@ namespace Panic_
                 }
 
                 else if (bott != null && bott.IsValid && bott.CanBeCasted() && Utils.SleepCheck("bott") &&
-                         menuValue.IsEnabled(tp.Name))
+                         menuValue.IsEnabled(bott.Name))
                 {
                     bott.UseAbility(fountain);
                     Utils.Sleep(150 + Game.Ping, "bott");
