@@ -316,7 +316,6 @@ namespace ODSharp
                 ObjectMgr.GetEntities<Hero>()
                     .Where(y => y.Team != me.Team && y.IsAlive && y.IsVisible && !y.IsIllusion)
                     .ToList();
-            if (HPBar)
 
             foreach (var x in enemy)
             {
@@ -448,17 +447,6 @@ namespace ODSharp
                 {
                     Combo = false;
                 }
-
-
-                if (Menu.Item("hpdraw").GetValue<KeyBind>().Active)
-                {
-                    HPBar = true;
-                }
-                else
-                {
-                    HPBar = false;
-                }
-
             }
         }
 
