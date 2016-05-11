@@ -23,24 +23,24 @@ namespace ODSharp
         private static Creep LastAttacked;
         private static float scaleX, scaleY;
         private static bool Combo;
-        private static bool Farm;
         private static bool HPBar;
         private static StringList Targeting;
         private static bool KillSteal;
         public static bool AutoAttackDisable;
         private static AbilityToggler menuValue;
         private static bool menuvalueSet;
-        private static readonly int[] orbb = new int[5] { 0, 6, 7, 8, 9 };
+        private static readonly int[] orbb = new int[5] { 0, 1, 2, 3, 4 };
         private static readonly int[] ult = { 0, 8, 9, 10 };
         private static readonly int[] wDamage = new int[5] { 0, 75, 150, 225, 300 };
+        private static readonly int[] ultRange = { 0, 375, 475, 575 };
 
 
 
         private static void Main()
         {
             Game.OnUpdate += Game_OnUpdate;
-            Game.OnUpdate += Farming;
             Game.OnUpdate += Killsteal;
+            Game.OnUpdate += AutoUlti;
             Drawing.OnDraw += Drawing_OnDraw;
             Drawing.OnDraw += DrawUltiDamage;
             Game.OnWndProc += Game_OnWndProc;
@@ -51,17 +51,22 @@ namespace ODSharp
 
             var orbwalk = new Menu("OrbWalk", "orb");
             var options = new Menu("Options", "opt");
+            var ulti = new Menu("AutoUlti", "ult");
+            ulti.AddItem(new MenuItem("autoUlt", "EnableAutoUlti").SetValue(true));
+            ulti.AddItem(new MenuItem("Heel", "Min targets to ulti").SetValue(new Slider(2, 1, 5)));
             options.AddItem(new MenuItem("wks", "Ks with W Enable").SetValue(true))
                      .SetTooltip(
                         "If in range, it will steal kill with Astral imprisonment");
+            options.AddItem(new MenuItem("autoUlt", "EnableAutoUlt").SetValue(true));
             options.AddItem(new MenuItem("hpdraw", "Draw HP Bar").SetValue(true)
         .SetTooltip("Will show ulti damage on HP Bar"));
+
             Menu.AddSubMenu(options);
             options.AddItem(new MenuItem("comboKey", "Combo Key").SetValue(new KeyBind(32, KeyBindType.Press)));
-            options.AddItem(new MenuItem("farmKey", "Farm Key").SetValue(new KeyBind('E', KeyBindType.Press)));
             options.AddItem(new MenuItem("ts", "Target Selector").SetValue(new StringList(new[] { "ClosestToMouse", "HighestHP", "HighestINT", "BestAATarget" })));
             Menu.AddToMainMenu();
             Menu.AddSubMenu(orbwalk);
+            Menu.AddSubMenu(ulti);
             orbwalk.AddItem(new MenuItem("orbwalkk", "OrbWalk").SetValue(true));
             var dict = new Dictionary<string, bool>
             {
@@ -86,6 +91,9 @@ namespace ODSharp
 
             if (astral == null)
                 astral = me.Spellbook.SpellW;
+
+            if (eclipse == null)
+                eclipse = me.Spellbook.SpellR;
 
 
             if (bkb == null)
@@ -229,48 +237,6 @@ namespace ODSharp
             }
         }
 
-        public static void Farming(EventArgs args)
-        {
-            if (!Game.IsInGame || Game.IsPaused || Game.IsWatchingGame)
-            {
-                return;
-            }
-
-            me = ObjectMgr.LocalHero;
-            if (me == null || me.ClassID != ClassID.CDOTA_Unit_Hero_Obsidian_Destroyer) return;
-
-            var attackRange = me.AttackRange;
-            var orblvl = me.Spellbook.SpellQ.Level;
-
-            if (Menu.Item("farmKey").GetValue<KeyBind>().Active)
-            {
-                var creepW =
-                ObjectMgr.GetEntities<Creep>()
-                    .Where(
-                        creep =>
-                            (creep.ClassID == ClassID.CDOTA_BaseNPC_Creep_Lane ||
-                             creep.ClassID == ClassID.CDOTA_BaseNPC_Creep_Siege ||
-                             creep.ClassID == ClassID.CDOTA_BaseNPC_Creep_Neutral ||
-                             creep.ClassID == ClassID.CDOTA_BaseNPC_Invoker_Forged_Spirit ||
-                             creep.ClassID == ClassID.CDOTA_BaseNPC_Creep) &&
-                             creep.IsAlive && creep.IsVisible && creep.IsSpawned &&
-                             creep.Team != me.Team && creep.Health <= Math.Floor((orbb[orblvl] / 100f * me.Mana + (creep.ClassID != ClassID.CDOTA_BaseNPC_Creep_Siege ? me.DamageAverage : me.DamageAverage / 2f))) &&
-                             creep.Position.Distance2D(me.Position) <= attackRange).ToList();
-                if (creepW.Count > 0)
-                {
-                    var creepmax = creepW.MaxOrDefault(x => x.Health);
-                    if (creepmax == LastAttacked) return;
-                    UpdateAutoAttack();
-                    me.Spellbook.SpellQ.UseAbility(creepmax);
-                    LastAttacked = creepmax;
-                    Utils.Sleep(200 + Game.Ping, "Farm");
-                }
-                else
-                {
-                    me.Move(Game.MousePosition);
-                }
-            }
-        }
         public static void Killsteal(EventArgs args)
         {
             if (!Game.IsInGame || Game.IsPaused || Game.IsWatchingGame)
@@ -301,6 +267,106 @@ namespace ODSharp
 
             }
         }
+
+        public static void AutoUlti(EventArgs args)
+        {
+            if (!Game.IsInGame || Game.IsPaused || Game.IsWatchingGame)
+            {
+                return;
+            }
+            me = ObjectMgr.LocalHero;
+            if (me == null || me.ClassID != ClassID.CDOTA_Unit_Hero_Obsidian_Destroyer) return;
+
+
+            var ultLvl = me.Spellbook.SpellR.Level;
+            var enemy =
+                ObjectMgr.GetEntities<Hero>()
+                    .Where(y => y.Team != me.Team && y.IsAlive && y.IsVisible && !y.IsIllusion)
+                    .ToList();
+            foreach (var z in enemy)
+            {
+                if (!z.IsVisible || !z.IsAlive) continue;
+
+                var meInt = Math.Floor(me.TotalIntelligence);
+                var enemyInt = Math.Floor(z.TotalIntelligence);
+                var damage = Math.Floor((ult[ultLvl]*(meInt - enemyInt))*(1 - z.MagicDamageResist));
+
+                var lens = me.Modifiers.Any(x => x.Name == "modifier_item_aether_lens");
+
+                if (z.NetworkName == "CDOTA_Unit_Hero_Spectre" && z.Spellbook.Spell3.Level > 0)
+                {
+                    damage =
+                        Math.Floor((ult[ultLvl]*(meInt - enemyInt))*
+                                   (1 - (0.10 + z.Spellbook.Spell3.Level*0.04))*(1 - z.MagicDamageResist));
+                }
+                if (z.NetworkName == "CDOTA_Unit_Hero_SkeletonKing" &&
+                    z.Spellbook.SpellR.CanBeCasted())
+                    damage = 0;
+                if (lens) damage = damage*1.08;
+                var rum = z.Modifiers.Any(x => x.Name == "modifier_kunkka_ghost_ship_damage_absorb");
+                if (rum) damage = damage*0.5;
+                var mom = z.Modifiers.Any(x => x.Name == "modifier_item_mask_of_madness_berserk");
+                if (mom) damage = damage*1.3;
+                var dmg = z.Health - damage;
+                var canKill = dmg <= 0;
+                var screenPos = HUDInfo.GetHPbarPosition(z);
+                if (!OnScreen(z.Position)) continue;
+
+                var text = canKill ? "Yes" : "No, damage:" + Math.Floor(damage);
+                var size = new Vector2(15, 15);
+                var textSize = Drawing.MeasureText(text, "Arial", size, FontFlags.AntiAlias);
+                var position = new Vector2(screenPos.X - textSize.X - 2, screenPos.Y - 3);
+                Drawing.DrawText(
+                    text,
+                    position,
+                    size,
+                    (canKill ? Color.LawnGreen : Color.Red),
+                    FontFlags.AntiAlias);
+                if (Menu.Item("autoUlt").GetValue<bool>() && me.IsAlive)
+                {
+                    if (z == null)
+                        return;
+                    //Console.WriteLine("D: " + damage);
+                    if (eclipse != null && z != null && eclipse.CanBeCasted()
+                        && !z.Modifiers.Any(y => y.Name == "modifier_tusk_snowball_movement")
+                        && !z.Modifiers.Any(y => y.Name == "modifier_snowball_movement_friendly")
+                        && !z.Modifiers.Any(y => y.Name == "modifier_templar_assassin_refraction_absorb")
+                        && !z.Modifiers.Any(y => y.Name == "modifier_ember_spirit_flame_guard")
+                        &&
+                        !z.Modifiers.Any(y => y.Name == "modifier_ember_spirit_sleight_of_fist_caster_invulnerability")
+                        &&
+                        !z.Modifiers.Any(y => y.Name == "modifier_ember_spirit_sleight_of_fist_caster_invulnerability")
+                        && !z.Modifiers.Any(y => y.Name == "modifier_obsidian_destroyer_astral_imprisonment_prison")
+                        && !z.Modifiers.Any(y => y.Name == "modifier_puck_phase_shift")
+                        && !z.Modifiers.Any(y => y.Name == "modifier_eul_cyclone")
+                        && !z.Modifiers.Any(y => y.Name == "modifier_dazzle_shallow_grave")
+                        && !z.Modifiers.Any(y => y.Name == "modifier_shadow_demon_disruption")
+                        && !z.Modifiers.Any(y => y.Name == "modifier_necrolyte_reapers_scythe")
+                        && !z.Modifiers.Any(y => y.Name == "modifier_necrolyte_reapers_scythe")
+                        && !z.Modifiers.Any(y => y.Name == "modifier_storm_spirit_ball_lightning")
+                        && !z.Modifiers.Any(y => y.Name == "modifier_ember_spirit_fire_remnant")
+                        && !z.Modifiers.Any(y => y.Name == "modifier_nyx_assassin_spiked_carapace")
+                        && !z.Modifiers.Any(y => y.Name == "modifier_phantom_lancer_doppelwalk_phase")
+                        && !z.FindSpell("abaddon_borrowed_time").CanBeCasted() &&
+                        !z.Modifiers.Any(y => y.Name == "modifier_abaddon_borrowed_time_damage_redirect")
+                        && me.Distance2D(z) <= eclipse.GetCastRange() + 50
+                        && !z.IsMagicImmune()
+                        && enemy.Count(x => (x.Health - damage) <= 0 && x.Distance2D(z) <= ultRange[eclipse.Level - 1])
+                        >= (Menu.Item("Heel").GetValue<Slider>().Value)
+                        && enemy.Count(x => x.Distance2D(z) <= ultRange[eclipse.Level - 1])
+                        >= (Menu.Item("Heel").GetValue<Slider>().Value)
+                        && Utils.SleepCheck(z.Handle.ToString()))
+                    {
+                        eclipse.UseAbility(z.Position);
+                        Utils.Sleep(150, z.Handle.ToString());
+                        return;
+                    }
+                }
+            }
+        }
+
+
+
         private static void drawhpbar()
         {
             if (!Game.IsInGame || Game.IsPaused || Game.IsWatchingGame)
@@ -360,7 +426,7 @@ namespace ODSharp
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message);
+                    //Console.WriteLine(e.Message);
                 }
             }
         }
@@ -408,21 +474,6 @@ namespace ODSharp
 
             }
 
-        }
-
-        public static void UpdateAutoAttack()
-        {
-            var AA = Game.GetConsoleVar("dota_player_units_auto_attack_after_spell");
-            if (!Utils.SleepCheck("Farm") && AA.GetInt() == 1)
-            {
-                AA.SetValue(0);
-                AutoAttackDisable = false;
-            }
-            else if (Utils.SleepCheck("Farm") && AA.GetInt() != 1)
-            {
-                AA.SetValue(1);
-                AutoAttackDisable = true;
-            }
         }
 
         public static Hero HighestInt(Hero source, float range = 1000)
