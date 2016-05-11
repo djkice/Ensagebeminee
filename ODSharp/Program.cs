@@ -307,21 +307,7 @@ namespace ODSharp
                 if (rum) damage = damage*0.5;
                 var mom = z.Modifiers.Any(x => x.Name == "modifier_item_mask_of_madness_berserk");
                 if (mom) damage = damage*1.3;
-                var dmg = z.Health - damage;
-                var canKill = dmg <= 0;
-                var screenPos = HUDInfo.GetHPbarPosition(z);
-                if (!OnScreen(z.Position)) continue;
 
-                var text = canKill ? "Yes" : "No, damage:" + Math.Floor(damage);
-                var size = new Vector2(15, 15);
-                var textSize = Drawing.MeasureText(text, "Arial", size, FontFlags.AntiAlias);
-                var position = new Vector2(screenPos.X - textSize.X - 2, screenPos.Y - 3);
-                Drawing.DrawText(
-                    text,
-                    position,
-                    size,
-                    (canKill ? Color.LawnGreen : Color.Red),
-                    FontFlags.AntiAlias);
                 if (Menu.Item("autoUlt").GetValue<bool>() && me.IsAlive)
                 {
                     if (z == null)
