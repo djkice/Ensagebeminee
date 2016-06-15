@@ -17,7 +17,7 @@ namespace ODSharp
     {
 
         private static Ability astral, orb, eclipse;
-        private static Item bkb, hex, orchid, shiva, atos;
+        private static Item bkb, hex, orchid, shiva, atos, blood;
         private static readonly Menu Menu = new Menu("ODSharp", "odsharp", true, "npc_dota_hero_obsidian_destroyer", true);
         private static Hero me, target;
         private static Creep LastAttacked;
@@ -75,6 +75,7 @@ namespace ODSharp
                 { "item_orchid", true },
                 { "item_shivas_guard", true },
                 { "item_rod_of_atos", true },
+                { "item_bloodthorn", true },
  
             };
             Menu.AddItem(new MenuItem("Items", "Items:").SetValue(new AbilityToggler(dict)));
@@ -113,6 +114,9 @@ namespace ODSharp
 
             if (atos == null)
                 atos = me.FindItem("item_rod_of_atos");
+                
+                   if (blood == null)
+                blood = me.FindItem("item_bloodthorn");
 
             if (!menuvalueSet)
             {
@@ -204,6 +208,12 @@ namespace ODSharp
                     {
                         orchid.CastStun(target);
                         Utils.Sleep(250 + Game.Ping, "orchid");
+                        return;
+                    }
+                    if (blood != null && blood.IsValid && blood.CanBeCasted() && Utils.SleepCheck("blood") && menuValue.IsEnabled(blood.Name))
+                    {
+                        blood.UseAbility(target);
+                        Utils.Sleep(150 + Game.Ping, "blood");
                         return;
                     }
 
